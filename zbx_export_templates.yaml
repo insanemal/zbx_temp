@@ -1,0 +1,451 @@
+zabbix_export:
+  version: '7.2'
+  template_groups:
+    - uuid: 7c2cb727f85b492d88cd56e17127c64d
+      name: Templates/SAN
+  templates:
+    - uuid: af2dcfd3e2d1436dad11879e07834d9b
+      template: ScoutAM
+      name: ScoutAM
+      description: 'ScoutAM Template'
+      groups:
+        - name: Templates/SAN
+      items:
+        - uuid: ca19150490c143cdb6584cdccf61612d
+          name: 'ScoutAM archiver completed copies'
+          type: TRAP
+          key: scoutam.archiver.completed_copies
+          units: Copies
+        - uuid: c8f2d8a7a34045d5ac096854d673c4a3
+          name: 'ScoutAM archiver completed data'
+          type: TRAP
+          key: scoutam.archiver.completed_data
+          units: B
+        - uuid: aad6cda6d87746ac85106af91ed78f18
+          name: 'ScoutAM archiver get copy errors'
+          type: TRAP
+          key: scoutam.archiver.getcopy_err
+          units: Errors
+        - uuid: 67f31fdb25b343c2908835578797a5c8
+          name: 'ScoutAM archiver set copy errors'
+          type: TRAP
+          key: scoutam.archiver.setcopy_err
+          units: Errors
+        - uuid: 9480b666a0704d808ae2e0cf978ab391
+          name: 'ScoutAM API requests'
+          type: TRAP
+          key: scoutam.auth.api_request
+        - uuid: 107486e070fa4519b4151a6dc7051bed
+          name: 'ScoutAM API forbidden requests'
+          type: TRAP
+          key: scoutam.auth.api_request_forbidden
+        - uuid: a8e354d152f143ecbd09435965c370ee
+          name: 'ScoutAM API requests with an invalid token'
+          type: TRAP
+          key: scoutam.auth.api_request_invalid_token
+        - uuid: c44493caaa9844a4bcbdc10a82929312
+          name: 'ScoutAM API invalid requests'
+          type: TRAP
+          key: scoutam.auth.api_request_notfound
+        - uuid: bb34b1d31a6e4e88b86a34b6436bdba5
+          name: 'ScoutAM API requests without a token'
+          type: TRAP
+          key: scoutam.auth.api_request_no_token
+        - uuid: 78957d7918984d0d8b6180797d453a81
+          name: 'ScoutAM API successful requests'
+          type: TRAP
+          key: scoutam.auth.api_request_success
+        - uuid: e4ce5da00cea4b47858fc105990de733
+          name: 'ScoutAM Scheduler pending queue archive job volume'
+          type: TRAP
+          key: 'scoutam.sched.data[pending,archive]'
+          units: B
+        - uuid: e2f0529978b841f38a371ef099b5be7b
+          name: 'ScoutAM Scheduler pending queue other job volume'
+          type: TRAP
+          key: 'scoutam.sched.data[pending,other]'
+          units: B
+        - uuid: 6e178a20f4854669bacdcba7bd26e9f5
+          name: 'ScoutAM Scheduler pending queue stage job volume'
+          type: TRAP
+          key: 'scoutam.sched.data[pending,stage]'
+          units: B
+        - uuid: 524604da38e94fe29c2a6166e8f9dde4
+          name: 'ScoutAM Scheduler reserving queue archive job volume'
+          type: TRAP
+          key: 'scoutam.sched.data[reserving,archive]'
+          units: B
+        - uuid: f910af27244e421abebf4404267ef3df
+          name: 'ScoutAM Scheduler reserving queue other job volume'
+          type: TRAP
+          key: 'scoutam.sched.data[reserving,other]'
+          units: B
+        - uuid: 05b9eed32d5b42bca85c3392318f78a7
+          name: 'ScoutAM Scheduler reserving queue stage job volume'
+          type: TRAP
+          key: 'scoutam.sched.data[reserving,stage]'
+          units: B
+        - uuid: feaec50395f641e5aa7bf3f38081ea57
+          name: 'ScoutAM Scheduler running queue archive job volume'
+          type: TRAP
+          key: 'scoutam.sched.data[running,archive]'
+          units: B
+        - uuid: 3dd310b2dc69418fa58c3a2f03da987c
+          name: 'ScoutAM Scheduler running queue other job volume'
+          type: TRAP
+          key: 'scoutam.sched.data[running,other]'
+          units: B
+        - uuid: c8666407dc0844f4812b0288053755f1
+          name: 'ScoutAM Scheduler running queue stage job volume'
+          type: TRAP
+          key: 'scoutam.sched.data[running,stage]'
+          units: B
+        - uuid: 56d448b6fa5646a2b34fd29ce0a8f223
+          name: 'ScoutAM Scheduler wait queue archive job volume'
+          type: TRAP
+          key: 'scoutam.sched.data[wait,archive]'
+          units: B
+        - uuid: 2214d27190b14786b63d05e91569fa5c
+          name: 'ScoutAM Scheduler wait queue other job volume'
+          type: TRAP
+          key: 'scoutam.sched.data[wait,other]'
+          units: B
+        - uuid: a164aad29ee643779e2fcbde98352214
+          name: 'ScoutAM Scheduler wait queue stage job volume'
+          type: TRAP
+          key: 'scoutam.sched.data[wait,stage]'
+          units: B
+        - uuid: 2ed38641346643be9908881dfd34be17
+          name: 'ScoutAM Scheduler pending queue archive job count'
+          type: TRAP
+          key: 'scoutam.sched.jobs[pending,archive]'
+          units: Jobs
+        - uuid: fb0c651819af49b4905098d271ed3b73
+          name: 'ScoutAM Scheduler pending queue other job count'
+          type: TRAP
+          key: 'scoutam.sched.jobs[pending,other]'
+          units: Jobs
+        - uuid: 4ad7cd9ba8da40b3827b0dcc91c407e3
+          name: 'ScoutAM Scheduler pending queue stage job count'
+          type: TRAP
+          key: 'scoutam.sched.jobs[pending,stage]'
+          units: Jobs
+        - uuid: 4956a2ae96c249f192058a05f2620c7e
+          name: 'ScoutAM Scheduler reserving queue archive job count'
+          type: TRAP
+          key: 'scoutam.sched.jobs[reserving,archive]'
+          units: Jobs
+        - uuid: 62ebb306d69a41bfba17b5937c218852
+          name: 'ScoutAM Scheduler reserving queue other job count'
+          type: TRAP
+          key: 'scoutam.sched.jobs[reserving,other]'
+          units: Jobs
+        - uuid: 53e98ae759d649fd8cd32039a87aed42
+          name: 'ScoutAM Scheduler reserving queue stage job count'
+          type: TRAP
+          key: 'scoutam.sched.jobs[reserving,stage]'
+          units: Jobs
+        - uuid: c7f7710b0f7643658ce7be3c778d5f83
+          name: 'ScoutAM Scheduler running queue archive job count'
+          type: TRAP
+          key: 'scoutam.sched.jobs[running,archive]'
+          units: Jobs
+        - uuid: 44a21902a38947ad8630addf733e32b3
+          name: 'ScoutAM Scheduler running queue other job count'
+          type: TRAP
+          key: 'scoutam.sched.jobs[running,other]'
+          units: Jobs
+        - uuid: f383469b3382496aa92508eed0c22afe
+          name: 'ScoutAM Scheduler running queue stage job count'
+          type: TRAP
+          key: 'scoutam.sched.jobs[running,stage]'
+          units: Jobs
+        - uuid: 8402b625f202414792be2c8cd9d9bb14
+          name: 'ScoutAM Scheduler wait queue archive job count'
+          type: TRAP
+          key: 'scoutam.sched.jobs[wait,archive]'
+          units: Jobs
+        - uuid: e6ff8990edf34d6faac75cb57f5052ed
+          name: 'ScoutAM Scheduler wait queue other job count'
+          type: TRAP
+          key: 'scoutam.sched.jobs[wait,other]'
+          units: Jobs
+        - uuid: cad677af1c1a4563bb5a227cdfc74d4d
+          name: 'ScoutAM Scheduler wait queue stage job count'
+          type: TRAP
+          key: 'scoutam.sched.jobs[wait,stage]'
+          units: Jobs
+        - uuid: f9e8f2254cf04c1ba4f61763a5ad04a1
+          name: 'ScoutAM Scheduler pending queue archive section count'
+          type: TRAP
+          key: 'scoutam.sched.sections[pending,archive]'
+          units: Sections
+        - uuid: b9b5f23e3eaa4dd6b8fe65773a8719fc
+          name: 'ScoutAM Scheduler pending queue other section count'
+          type: TRAP
+          key: 'scoutam.sched.sections[pending,other]'
+          units: Sections
+        - uuid: 0ec22953f0134f1da9a0ca81e29aaed0
+          name: 'ScoutAM Scheduler pending queue stage section count'
+          type: TRAP
+          key: 'scoutam.sched.sections[pending,stage]'
+          units: Sections
+        - uuid: c6d0f1e34202445ebf0173348c6c85bf
+          name: 'ScoutAM Scheduler reserving queue archive section count'
+          type: TRAP
+          key: 'scoutam.sched.sections[reserving,archive]'
+          units: Sections
+        - uuid: bc29f64673d14e6394a0a790bcd406a7
+          name: 'ScoutAM Scheduler reserving queue other section count'
+          type: TRAP
+          key: 'scoutam.sched.sections[reserving,other]'
+          units: Sections
+        - uuid: 5916191c473f42898fb4e5a0ec65f244
+          name: 'ScoutAM Scheduler reserving queue stage section count'
+          type: TRAP
+          key: 'scoutam.sched.sections[reserving,stage]'
+          units: Sections
+        - uuid: 7eadd6e5160d44d2a6accbb18ffbe67e
+          name: 'ScoutAM Scheduler running queue archive section count'
+          type: TRAP
+          key: 'scoutam.sched.sections[running,archive]'
+          units: Sections
+        - uuid: 13c8d204d22a40acbd2d38f4eb93b28f
+          name: 'ScoutAM Scheduler running queue other section count'
+          type: TRAP
+          key: 'scoutam.sched.sections[running,other]'
+          units: Sections
+        - uuid: bde0058dfa664454bd221636f0908c19
+          name: 'ScoutAM Scheduler running queue stage section count'
+          type: TRAP
+          key: 'scoutam.sched.sections[running,stage]'
+          units: Sections
+        - uuid: 39c8873c7145493987ab94b9faeb9bb2
+          name: 'ScoutAM Scheduler wait queue archive section count'
+          type: TRAP
+          key: 'scoutam.sched.sections[wait,archive]'
+          units: Sections
+        - uuid: 098eb78e9f5f43dc8e5ca00f18361a98
+          name: 'ScoutAM Scheduler wait queue other section count'
+          type: TRAP
+          key: 'scoutam.sched.sections[wait,other]'
+          units: Sections
+        - uuid: a8ab05f5eb4347af90ca0be040c9405b
+          name: 'ScoutAM Scheduler wait queue stage section count'
+          type: TRAP
+          key: 'scoutam.sched.sections[wait,stage]'
+          units: Sections
+      discovery_rules:
+        - uuid: a086c353c78441deb160b31a2f73aabd
+          name: 'ScoutAM catalog discovery'
+          type: TRAP
+          key: scoutam.catalog.discovery
+          item_prototypes:
+            - uuid: 5bf0990051c447ddab1090ed980efb18
+              name: 'ScoutAM {#DOMAIN} {#POOL} available exported data'
+              type: TRAP
+              key: 'scoutam.catalog.available_data[{#DOMAIN},{#POOL},exported]'
+              units: B
+            - uuid: a43d87166b064c8f9047058cdd00e453
+              name: 'ScoutAM {#DOMAIN} {#POOL} available online data'
+              type: TRAP
+              key: 'scoutam.catalog.available_data[{#DOMAIN},{#POOL},online]'
+              units: B
+            - uuid: 6246cbaab8dd465780e0b40e35e85add
+              name: 'ScoutAM {#DOMAIN} {#POOL} total available data'
+              type: TRAP
+              key: 'scoutam.catalog.available_data[{#DOMAIN},{#POOL}]'
+              units: B
+            - uuid: fb68aa83a7a843daa9fa9595080a6f07
+              name: 'ScoutAM {#DOMAIN} {#POOL} draining volumes'
+              type: TRAP
+              key: 'scoutam.catalog.drain[{#DOMAIN},{#POOL}]'
+            - uuid: 4f8f926b9c3045258775fbb82e2b7531
+              name: 'ScoutAM {#DOMAIN} {#POOL} errored volumes'
+              type: TRAP
+              key: 'scoutam.catalog.error[{#DOMAIN},{#POOL}]'
+            - uuid: 72bddf7c995649db981627edf69b8495
+              name: 'ScoutAM {#DOMAIN} {#POOL} foreign volumes'
+              type: TRAP
+              key: 'scoutam.catalog.foreign[{#DOMAIN},{#POOL}]'
+            - uuid: f061a623a3914accbd076d813708d520
+              name: 'ScoutAM {#DOMAIN} {#POOL} full volumes'
+              type: TRAP
+              key: 'scoutam.catalog.full[{#DOMAIN},{#POOL}]'
+            - uuid: a5ea408a8fb34ca1a98510b719c47cfe
+              name: 'ScoutAM {#DOMAIN} {#POOL} labled volumes'
+              type: TRAP
+              key: 'scoutam.catalog.labeled[{#DOMAIN},{#POOL}]'
+            - uuid: 73d22b8e043e4a0faa996c1d0be5a350
+              name: 'ScoutAM {#DOMAIN} {#POOL} volumes that need attention'
+              type: TRAP
+              key: 'scoutam.catalog.needsattention[{#DOMAIN},{#POOL}]'
+            - uuid: 2c4b8b32b7f741978e668f3ccf724536
+              name: 'ScoutAM {#DOMAIN} {#POOL} read only volumes'
+              type: TRAP
+              key: 'scoutam.catalog.readonly[{#DOMAIN},{#POOL}]'
+            - uuid: 8f5a4eca56e5430c9be955a24521d894
+              name: 'ScoutAM {#DOMAIN} {#POOL} total exported data'
+              type: TRAP
+              key: 'scoutam.catalog.total_data[{#DOMAIN},{#POOL},exported]'
+              units: B
+            - uuid: a122ad8fcbf74a0f813966b367639719
+              name: 'ScoutAM {#DOMAIN} {#POOL} total online data'
+              type: TRAP
+              key: 'scoutam.catalog.total_data[{#DOMAIN},{#POOL},online]'
+              units: B
+            - uuid: adc9ec7291664518a7615b71fba130e6
+              name: 'ScoutAM {#DOMAIN} {#POOL} unavailable volumes'
+              type: TRAP
+              key: 'scoutam.catalog.unavail[{#DOMAIN},{#POOL}]'
+            - uuid: 3729a1f11a7246698113348e63561b9e
+              name: 'ScoutAM {#DOMAIN} {#POOL} used exported data'
+              type: TRAP
+              key: 'scoutam.catalog.used_data[{#DOMAIN},{#POOL},exported]'
+              units: B
+            - uuid: a9b886b366654353b4ba8acbc471e77c
+              name: 'ScoutAM {#DOMAIN} {#POOL} used online data'
+              type: TRAP
+              key: 'scoutam.catalog.used_data[{#DOMAIN},{#POOL},online]'
+              units: B
+            - uuid: 1bfa60f8f3a84adb8644d3d631265d4a
+              name: 'ScoutAM {#DOMAIN} {#POOL} exported volume count'
+              type: TRAP
+              key: 'scoutam.catalog.vol_count[{#DOMAIN},{#POOL},exported]'
+              units: Volumes
+            - uuid: 0c42822c958945d09404b8904e29f7eb
+              name: 'ScoutAM {#DOMAIN} {#POOL} online volume count'
+              type: TRAP
+              key: 'scoutam.catalog.vol_count[{#DOMAIN},{#POOL},online]'
+              units: Volumes
+        - uuid: a373f85ffa7b4957ab2c141cd0977af5
+          name: 'ScoutFS Discovery'
+          type: TRAP
+          key: scoutam.fs_discovery
+          enabled_lifetime_type: DISABLE_AFTER
+          enabled_lifetime: 1d
+          item_prototypes:
+            - uuid: 27258aed12b44679a31abd34c1d8474f
+              name: 'ScoutFS {#FSID} current accounting sequence number'
+              type: TRAP
+              key: 'scoutam.fs.acctfind_seq_point[{#FSID}]'
+            - uuid: 92604061a0a74589b8651d1fa1af1d8b
+              name: 'ScoutFS {#FSID} current archive sequence number'
+              type: TRAP
+              key: 'scoutam.fs.arfind_current_seq_point[{#FSID}]'
+            - uuid: 0aba2d811f25473f81be5605580c78a6
+              name: 'ScoutFS {#FSID} current archive restart checkpoint'
+              type: TRAP
+              key: 'scoutam.fs.arfind_restart_seq_point[{#FSID}]'
+            - uuid: 217c65660b614e1baa9ce08d5298c923
+              name: 'ScoutFS {#FSID} number of damaged files'
+              type: TRAP
+              key: 'scoutam.fs.damaged_count[{#FSID}]'
+              units: Files
+            - uuid: a5e9e1d70e1e458a8af61d98f01048c3
+              name: 'ScoutFS {#FSID} damaged data size'
+              type: TRAP
+              key: 'scoutam.fs.damaged_size[{#FSID}]'
+              units: B
+            - uuid: 7d3102966ad0448e9e8fefdebbaf33b4
+              name: 'ScoutFS {#FSID} current 4k data blocks capacity'
+              type: TRAP
+              key: 'scoutam.fs.data_blocks_capacity[{#FSID}]'
+              units: Blocks
+            - uuid: 4426449b33c4417caf605833db31142e
+              name: 'ScoutFS {#FSID} current 4k data blocks free'
+              type: TRAP
+              key: 'scoutam.fs.data_blocks_free[{#FSID}]'
+              units: Blocks
+            - uuid: 31b8f4cd9398420ab147631f45d5117d
+              name: 'ScoutFS {#FSID} current data capacity'
+              type: TRAP
+              key: 'scoutam.fs.data_size_capacity[{#FSID}]'
+              units: B
+            - uuid: 297abe8ba5ac4954a108a016fa0c1478
+              name: 'ScoutFS {#FSID} current data free space'
+              type: TRAP
+              key: 'scoutam.fs.data_size_free[{#FSID}]'
+              units: B
+            - uuid: 897828b8ff794b269ce786c78184baf2
+              name: 'ScoutFS {#FSID} current sequence number'
+              type: TRAP
+              key: 'scoutam.fs.fs_current_seq_point[{#FSID}]'
+            - uuid: d91c173e7882425f8136733ae7602f33
+              name: 'ScoutFS {#FSID} data high watermark'
+              type: TRAP
+              key: 'scoutam.fs.highwatermark[{#FSID}]'
+              units: B
+            - uuid: c420652abaae421b9bb420c13655213c
+              name: 'ScoutFS {#FSID} data low watermark'
+              type: TRAP
+              key: 'scoutam.fs.lowwatermark[{#FSID}]'
+              units: B
+            - uuid: 090a99b36c394a8f8907b8cd011a66c6
+              name: 'ScoutFS {#FSID} current metadata 4k blocks capacity'
+              type: TRAP
+              key: 'scoutam.fs.metadata_blocks_capacity[{#FSID}]'
+              units: Blocks
+            - uuid: 90542533ada241c4a80ca0b329473864
+              name: 'ScoutFS {#FSID} current metadata 4k blocks free'
+              type: TRAP
+              key: 'scoutam.fs.metadata_blocks_free[{#FSID}]'
+              units: Blocks
+            - uuid: 36535a9d1f444f518fe8f4d58281c6b1
+              name: 'ScoutFS {#FSID} current metadata capacity'
+              type: TRAP
+              key: 'scoutam.fs.metadata_size_capacity[{#FSID}]'
+              units: B
+            - uuid: e23cfd6d61614d03a87a590e30e487c8
+              name: 'ScoutFS {#FSID} current metadata free space'
+              type: TRAP
+              key: 'scoutam.fs.metadata_size_free[{#FSID}]'
+              units: B
+            - uuid: f4c8bd8b5f634231aea19409a39c52c6
+              name: 'ScoutFS {#FSID} number of files set to never archive'
+              type: TRAP
+              key: 'scoutam.fs.noarchive_count[{#FSID}]'
+              units: Files
+            - uuid: cc33ddeed4ce4f5d9aa59045e597ce7a
+              name: 'ScoutFS {#FSID} data set to never archive'
+              type: TRAP
+              key: 'scoutam.fs.noarchive_size[{#FSID}]'
+              units: B
+            - uuid: af0ad3b2841e4962a557ebba1ccd53d4
+              name: 'ScoutFS {#FSID} number of files pending archive'
+              type: TRAP
+              key: 'scoutam.fs.pending_count[{#FSID}]'
+              units: Files
+            - uuid: bec53c56af804373980d475c56adf070
+              name: 'ScoutFS {#FSID} data pending archive'
+              type: TRAP
+              key: 'scoutam.fs.pending_size[{#FSID}]'
+              units: B
+            - uuid: d8d115da8ec9473f8a225f16e795c8ac
+              name: 'ScoutFS {#FSID} number of files releasable'
+              type: TRAP
+              key: 'scoutam.fs.releasable_count[{#FSID}]'
+              units: Files
+            - uuid: 68277683ae374b33879439a5f6291994
+              name: 'ScoutFS {#FSID} data releaseable'
+              type: TRAP
+              key: 'scoutam.fs.releasable_size[{#FSID}]'
+              units: B
+            - uuid: d3f878e0dd8e4a61bbb505687d3a5f92
+              name: 'ScoutFS {#FSID} current stage sequence number'
+              type: TRAP
+              key: 'scoutam.fs.stfind_current_seq_point[{#FSID}]'
+            - uuid: 345bdb96f2d245f0900e85053f7d3f4a
+              name: 'ScoutFS {#FSID} current stage restart checkpoint'
+              type: TRAP
+              key: 'scoutam.fs.stfind_restart_seq_point[{#FSID}]'
+            - uuid: 940cfdc4599c4692af1ed819128d8561
+              name: 'ScoutFS {#FSID} number of unmatched files'
+              type: TRAP
+              key: 'scoutam.fs.unmatched_count[{#FSID}]'
+              units: Files
+            - uuid: 5cd8b7d31da14e22a1ef98268385e2e9
+              name: 'ScoutFS {#FSID} unmatched data size'
+              type: TRAP
+              key: 'scoutam.fs.unmatched_size[{#FSID}]'
+              units: B
