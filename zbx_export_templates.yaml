@@ -55,6 +55,38 @@ zabbix_export:
           name: 'ScoutAM API successful requests'
           type: TRAP
           key: scoutam.auth.api_request_success
+        - uuid: 2e33a074e68e43d0a975d333431d44bb
+          name: 'ScoutAM number of archive section errors'
+          type: TRAP
+          key: scoutam.resource.arch_section_err
+        - uuid: 1110f55663da42c684a53623009c67df
+          name: 'ScoutAM Resource busy count'
+          type: TRAP
+          key: scoutam.resource.busy
+        - uuid: 577edfb5c0ea4990bf74161fd712fadd
+          name: 'ScoutAM Resource down count'
+          type: TRAP
+          key: scoutam.resource.down
+        - uuid: f45a50041044403a80a645bb8b106ede
+          name: 'ScoutAM Resource error count'
+          type: TRAP
+          key: scoutam.resource.err
+        - uuid: 73c9febea295461ab03f74767a886c9e
+          name: 'ScoutAM files deleted before archiving'
+          type: TRAP
+          key: scoutam.resource.file_deleted_before_archive
+        - uuid: 8a0070a9022f4568927b39e5c05e5b69
+          name: 'ScoutAM Resource idle count'
+          type: TRAP
+          key: scoutam.resource.idle
+        - uuid: 2c8c1ad223bd415085429a63aec5fb71
+          name: 'ScoutAM Resource off count'
+          type: TRAP
+          key: scoutam.resource.off
+        - uuid: f967db915638485e8ec581243580c251
+          name: 'ScoutAM Resource unknown count'
+          type: TRAP
+          key: scoutam.resource.unknown
         - uuid: e4ce5da00cea4b47858fc105990de733
           name: 'ScoutAM Scheduler pending queue archive job volume'
           type: TRAP
@@ -236,6 +268,16 @@ zabbix_export:
           key: 'scoutam.sched.sections[wait,stage]'
           units: Sections
       discovery_rules:
+        - uuid: 6fc62a30ab0e44f0acf42c8e8ff64fc0
+          name: 'ScoutAM Volume only Discovery'
+          type: TRAP
+          key: scountam.exec.vol_only_disc
+          item_prototypes:
+            - uuid: 058a0798b9ef432798790d4e533ea67d
+              name: 'ScoutAM number of media prune requests on {#VOL}'
+              type: TRAP
+              key: 'scoutam.exec.prune[media,{#VOL}]'
+              units: Requests
         - uuid: a086c353c78441deb160b31a2f73aabd
           name: 'ScoutAM catalog discovery'
           type: TRAP
@@ -318,6 +360,81 @@ zabbix_export:
               type: TRAP
               key: 'scoutam.catalog.vol_count[{#DOMAIN},{#POOL},online]'
               units: Volumes
+        - uuid: d0b386e7742a45d78c0b77cd6d1ad629
+          name: 'ScoutAM Domain only Discovery'
+          type: TRAP
+          key: scoutam.exec.dom_only_disc
+          item_prototypes:
+            - uuid: 8e11c019ed504a0c8c378795c046129d
+              name: 'ScoutAM number of media audit requests for {#DOMAIN}'
+              type: TRAP
+              key: 'scoutam.exec.audit[media,{#DOMAIN}]'
+              units: Requests
+            - uuid: dbc97300b6bf473591b1bb8e5ddcdb45
+              name: 'ScoutAM number of libary exchange media requests for {#DOMAIN}'
+              type: TRAP
+              key: 'scoutam.exec.exchange[library,{#DOMAIN}]'
+              units: Requests
+            - uuid: 5ba3272231f84bccabf880b6a216135c
+              name: 'ScoutAM number of libary export media requests for {#DOMAIN}'
+              type: TRAP
+              key: 'scoutam.exec.export[library,{#DOMAIN}]'
+              units: Requests
+            - uuid: b07db374554848d4ac4f646ded3d048a
+              name: 'ScoutAM number of media inventory requests for {#DOMAIN}'
+              type: TRAP
+              key: 'scoutam.exec.format[media,{#DOMAIN}]'
+              units: Requests
+            - uuid: a4c5a78dc67c4048bbf0be223eae2921
+              name: 'ScoutAM number of libary import media requests for {#DOMAIN}'
+              type: TRAP
+              key: 'scoutam.exec.import[library,{#DOMAIN}]'
+              units: Requests
+            - uuid: 5ed2877b97df4331885419bf876dfa9a
+              name: 'ScoutAM number of libary invertory requests for {#DOMAIN}'
+              type: TRAP
+              key: 'scoutam.exec.inventory[library,{#DOMAIN}]'
+              units: Requests
+            - uuid: c086f59c76a94ddc90a536031711318b
+              name: 'ScoutAM number of libary move requests for {#DOMAIN}'
+              type: TRAP
+              key: 'scoutam.exec.move_media[library,{#DOMAIN}]'
+              units: Requests
+        - uuid: b4ef3f7a2ebe4879aa5bec398d0e078b
+          name: 'ScoutAM Volume Resource discovery'
+          type: TRAP
+          key: scoutam.exec.vol_res_disc
+          item_prototypes:
+            - uuid: 86cb0a840c2f4f9da02503231ac203d6
+              name: 'ScoutAM amount of data archived'
+              type: TRAP
+              key: 'scoutam.exec.data[archive,{#VOLUME},{#RESOURCE}]'
+              units: B
+            - uuid: a9f666c080d74e1a9a3ee037cbf6aa33
+              name: 'ScoutAM amount of data staged'
+              type: TRAP
+              key: 'scoutam.exec.data[stage,{#VOLUME},{#RESOURCE}]'
+              units: B
+            - uuid: 027f74e0a29f41f4b120811ba172c6df
+              name: 'ScoutAM number of sections archived'
+              type: TRAP
+              key: 'scoutam.exec.sections[archive,{#VOLUME},{#RESOURCE}]'
+              units: Sections
+            - uuid: 484377ade4bd4685949f1c7eaf576180
+              name: 'ScoutAM number of sections staged'
+              type: TRAP
+              key: 'scoutam.exec.sections[stage,{#VOLUME},{#RESOURCE}]'
+              units: Sections
+            - uuid: 3e43cb5565f84298ba7eb6c33dfd37d9
+              name: 'ScoutAM number of sections staged that failed to read from archive'
+              type: TRAP
+              key: 'scoutam.exec.stage_section_read_err[stage,{#VOLUME},{#RESOURCE}]'
+              units: Sections
+            - uuid: 6972be25be9044c09e2e8698e49f6caf
+              name: 'ScoutAM number of sections staged that failed to write to ScoutFS'
+              type: TRAP
+              key: 'scoutam.exec.stage_section_write_error[stage,{#VOLUME},{#RESOURCE}]'
+              units: Sections
         - uuid: a373f85ffa7b4957ab2c141cd0977af5
           name: 'ScoutFS Discovery'
           type: TRAP
@@ -449,3 +566,18 @@ zabbix_export:
               type: TRAP
               key: 'scoutam.fs.unmatched_size[{#FSID}]'
               units: B
+        - uuid: c0e3f81acb0b4397a4122fe840f80f2a
+          name: 'ScoutAM SCSI device discovery'
+          type: TRAP
+          key: scoutam.scsi.discovery
+          item_prototypes:
+            - uuid: 0ac70ee66db246daa6e7f1a35eb5a63e
+              name: 'SCSI drive {#DRIVE} command {#COMMAND} data volume'
+              type: TRAP
+              key: 'scoutam.scsi.sg_cmd_data[{#DRIVE},{#COMMAND}]'
+              units: B
+            - uuid: a57aae7996fc4d969d23e8630a9c5a1a
+              name: 'Response time of SCSI command {#COMMAND} request for drive {#DRIVE}'
+              type: TRAP
+              key: 'scoutam.scsi.sg_cmd_time_ms[{#DRIVE},{#COMMAND}]'
+              units: ms
