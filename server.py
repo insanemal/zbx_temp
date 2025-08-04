@@ -5,22 +5,62 @@ import os
 import re
 import sys
 import syslog
-import threading
 import time
-import types
+from multiprocessing import Manager, Process
 from socket import AF_INET, SOCK_DGRAM, socket
 
+import deamonize
 import misc_util
 from zbxsend import Metric, send_to_zabbix
 
-try:
-    from setproctitle import setproctitle
-except ImportError:
-    setproctitle = None
-
-import deamonize
-
 __all__ = ["Server"]
+
+
+def run_socket(buf_len, data, hostname, port):
+    ### Setup listening thread ###
+    ### This needs a signal_handler to handle signals cleanly ###
+    import signal
+
+    addr = (hostname, port)
+    sock = socket(AF_INET, SOCK_DGRAM)
+    sock.bind(addr)
+
+    def signal_handler(signal, frame):
+        sock.close()
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, signal_handler)
+    while True:
+        buf, addr = sock.recvfrom(buf_len)
+        host, _ = addr
+        data.append((buf, host))
+
+
+def do_send(zabbix_host, zabbix_port, metrics_list, disco_list, sleep_len):
+    ### Setup Zabbix sender thread ###
+    ### This needs a signal_handler to handle signals cleanly ###
+    import signal
+
+    def signal_handler(signal, frame):
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, signal_handler)
+    while True:
+        d_sub = []
+        while len(disco_list) > 0:
+            disco_item = disco_list.pop()
+            d_sub.extend(disco_item)
+        if len(d_sub) > 0:
+            send_to_zabbix(d_sub, zabbix_host, zabbix_port, 15, False)
+            # Send Autodiscovery 'metrics' to zabbix before data to allow for item creation
+        pending = len(metrics_list)
+        metrics = []
+        if pending > 0:
+            for x in range(pending):
+                metrics.extend(metrics_list.pop())
+            send_to_zabbix(metrics, zabbix_host, zabbix_port, 15, False)
+            # Send regular metrics to zabbix
+        time.sleep(int(sleep_len / 1000))
 
 
 def syslog_print(message):
@@ -29,10 +69,6 @@ def syslog_print(message):
 
 def stdout_print(message):
     print(message)
-
-
-def _clean_key(k):
-    return re.sub("[^a-zA-Z_\\-0-9\\.]", "", k.replace("/", "-").replace(" ", "_"))
 
 
 class Server(object):
@@ -44,6 +80,7 @@ class Server(object):
         zabbix_host="localhost",
         zabbix_port=10051,
         flush_interval=10000,
+        override_host=None,
     ):
         self.buf = 10240
         self.flush_interval = flush_interval
@@ -52,6 +89,8 @@ class Server(object):
         self.zabbix_port = zabbix_port
         self.debug = debug
         self.log = stdout_print
+        self.manager = Manager()
+        self.override_host = override_host
 
         self.counters = []
         self.timers = []
@@ -62,14 +101,34 @@ class Server(object):
         self.vol_res = {}
         self.domain_only = {}
         self.vol_only = {}
+        self.scsi_drive = {}
+
+        self.buffer = self.manager.list()
+        self.metrics = self.manager.list()
+        self.metrics_disco = self.manager.list()
 
     def process(self, data, rhost):
+        print("---------------------")
+        print(len(self.counters))
+        print(len(self.timers))
+        print(len(self.gauges))
+        print(len(self.scoutFS))
+        print(self.flusher)
+        print(len(self.domain_pool))
+        print(len(self.vol_res))
+        print(len(self.domain_only))
+        print(len(self.vol_only))
+        print(len(self.scsi_drive))
+        print(len(self.buffer))
+        print(len(self.metrics))
+        print(len(self.metrics_disco))
+        print("---------------------")
+        print("")
         datas = data.decode("utf-8")
         for line in datas.split("\n"):
             try:
-                if (
-                    line.count(":") == 3
-                ):  # Broken implementations add host infront of the key.
+                if line.count(":") == 3:
+                    # Broken implementations add host infront of the key.
                     host, key, val = line.split(":")
                 else:
                     # Working ones don't. Some embed data in the key.
@@ -89,15 +148,19 @@ class Server(object):
                                 tkey = tkey + seg + ","
                         if len(tmp_dict) > 0:
                             if "hostname" in tmp_dict:
-                                host = tmp_dict["hostname"]
+                                if not self.override_host == None:
+                                    host = self.override_host
+                                else:
+                                    host = tmp_dict["hostname"]
                                 del tmp_dict["hostname"]
-                            if (
-                                host == ""
-                            ):  # Paranoia. It looks like every message has a hostname= tag, but better safe then segfault.
-                                host = rhost
-                            if (
-                                "scoutam.fs" in mkey
-                            ):  # Zabbix Autodiscovery for fsid's but we'll build the metric via the common case.
+                            if host == "":
+                                # Paranoia. It looks like every message has a hostname= tag, but better safe then segfault.
+                                if not self.override_host == None:
+                                    host = self.override_host
+                                else:
+                                    host = rhost
+                            if "scoutam.fs" in mkey:
+                                # Zabbix Autodiscovery for fsid's but we'll build the metric via the common case.
                                 if "fsid" in tmp_dict:
                                     if self.debug:
                                         self.log(tmp_dict["fsid"])
@@ -108,9 +171,8 @@ class Server(object):
                                         self.scoutFS[host].append(fsid)
                                     if self.debug:
                                         self.log(self.scoutFS)
-                            if (
-                                "scoutam.catalog" in mkey
-                            ):  # Zabbix Autodiscovery for domain/pool combinations. We'll have to build this one explicitly
+                            if "scoutam.catalog" in mkey:
+                                # Zabbix Autodiscovery for domain/pool combinations. We'll have to build this one explicitly
                                 if "domain" in tmp_dict and "pool" in tmp_dict:
                                     dom = tmp_dict["domain"]
                                     pool = tmp_dict["pool"]
@@ -121,13 +183,14 @@ class Server(object):
                                         self.domain_pool[host].append((dom, pool))
                                     if self.debug:
                                         self.log(tkey)
-                                if (
-                                    "status" in tmp_dict
-                                ):  # Seems StatsD doesn't care about ordering. Zabbix does. So lets ensure it's consistent
+                                if "status" in tmp_dict:
+                                    # Seems StatsD doesn't care about ordering. Zabbix does. So lets ensure it's consistent
                                     stat = tmp_dict["status"]
                                     tkey = tkey + stat + ","
                             elif "scoutam.exec" in mkey:
+                                # Zabbix Autodiscovery for the exec tree of values. Explict build required
                                 if "domain" in tmp_dict and "type" in tmp_dict:
+                                    # Type, domain
                                     tdata = tmp_dict["type"]
                                     dom = tmp_dict["domain"]
                                     tkey = tkey + tdata + "," + dom + ","
@@ -136,6 +199,7 @@ class Server(object):
                                     if dom not in self.domain_only[host]:
                                         self.domain_only[host].append(dom)
                                 elif "volume" in mkey and "resource" in mkey:
+                                    # Type,volume,resource
                                     vol = tmp_dict["volume"]
                                     res = tmp_dict["resource"]
                                     tdata = tmp_dict["type"]
@@ -145,6 +209,7 @@ class Server(object):
                                     if (vol, res) not in self.vol_res[host]:
                                         self.vol_res[host].append((vol, res))
                                 else:
+                                    # Type, Volume
                                     tdata = tmp_dict["type"]
                                     vol = tmp_dict["volume"]
                                     tkey = tkey + tdata + "," + vol + ","
@@ -152,10 +217,21 @@ class Server(object):
                                         self.vol_only[host] = []
                                     if vol not in self.vol_only[host]:
                                         self.vol_only[host].append(vol)
+                            elif "scoutam.scsi" in mkey:
+                                # Zabbix Autodiscovery for the tape drive metrics
+                                drive = tmp_dict["drive"]
+                                command = tmp_dict["command"]
+                                tkey = tkey + drive + "," + command + ","
+                                if not host in self.scsi_drive:
+                                    self.scsi_drive[host] = []
+                                if not (drive, command) in self.scsi_drive[host]:
+                                    self.scsi_drive[host].append((drive, command))
                             else:
+                                # Common case for building the metric
                                 for dkey in tmp_dict:
                                     tkey = tkey + tmp_dict[dkey] + ","
 
+                        # Clean up of trailing stuff
                         if tkey[-1] == ",":
                             key = tkey[:-1] + "]"
                         elif tkey[-1] == "[":
@@ -172,7 +248,7 @@ class Server(object):
                 if self.debug:
                     self.log("DEBUG:Data packet dump: %r" % datas)
                 return
-            # key = _clean_key(key)
+
             if self.debug:
                 self.log((host, key))
 
@@ -180,13 +256,20 @@ class Server(object):
             fields = val.split("|")
 
             if fields[1] == "ms":
+                # Timestamps are unix time or count in ms.
                 self.timers.append((host, key, int(fields[0] or 0), int(time.time())))
             elif fields[-1] == "g":
+                # Raw guage values
                 self.gauges.append((host, key, int(fields[0]), int(time.time())))
             else:
+                # Counters can contain weird rate modifiers
                 if len(fields) == 3:
                     sample_rate = float(
-                        re.match("^@([\\d\\.]+)", fields[2]).groups()[0]
+                        re.match(
+                            "^@([\\d\\.]+)", fields[2]
+                        ).groups()[  # pyright: ignore
+                            0
+                        ]
                     )
                 self.counters.append(
                     (
@@ -199,8 +282,6 @@ class Server(object):
 
     def flush(self):
         stats = 0
-        stat_string = ""
-        #        self.pct_threshold = 10
 
         metrics = []
         if len(self.domain_pool) > 0:
@@ -221,8 +302,8 @@ class Server(object):
                     stats += 1
                     if self.debug:
                         self.log(v)
-                    metrics.append(
-                        Metric(h, "scoutam.catalog.discovery", v, int(time.time()))
+                    self.metrics_disco.append(
+                        [Metric(h, "scoutam.catalog.discovery", v, int(time.time()))]
                     )
 
         if len(self.vol_res) > 0:
@@ -243,8 +324,30 @@ class Server(object):
                     stats += 1
                     if self.debug:
                         self.log(v)
-                    metrics.append(
-                        Metric(h, "scoutam.exec.vol_res_disc", v, int(time.time()))
+                    self.metrics_disco.append(
+                        [Metric(h, "scoutam.exec.vol_res_disc", v, int(time.time()))]
+                    )
+
+        if len(self.scsi_drive) > 0:
+            for h in self.scsi_drive:
+                if len(self.scsi_drive[h]) > 0:
+                    v = "[\n"
+                    first = True
+                    for d, p in self.scsi_drive[h]:
+                        if not first:
+                            v = v + "\t,\n"
+                        first = False
+                        v = v + "\t{\n"
+                        v = v + '\t\t"{#DRIVE}":"' + d + '",\n'
+                        v = v + '\t\t"{#COMMAND}":"' + p + '"\n'
+                        v = v + "\t}\n"
+
+                    v = v + "]\n"
+                    stats += 1
+                    if self.debug:
+                        self.log(v)
+                    self.metrics_disco.append(
+                        [Metric(h, "scoutam.scsi.discovery", v, int(time.time()))]
                     )
 
         if len(self.domain_only) > 0:
@@ -265,8 +368,8 @@ class Server(object):
                     stats += 1
                     if self.debug:
                         self.log(v)
-                    metrics.append(
-                        Metric(h, "scoutam.exec.dom_only_disc", v, int(time.time()))
+                    self.metrics_disco.append(
+                        [Metric(h, "scoutam.exec.dom_only_disc", v, int(time.time()))]
                     )
 
         if len(self.vol_only) > 0:
@@ -287,8 +390,8 @@ class Server(object):
                     stats += 1
                     if self.debug:
                         self.log(v)
-                    metrics.append(
-                        Metric(h, "scoutam.exec.vol_only_disc", v, int(time.time()))
+                    self.metrics_disco.append(
+                        [Metric(h, "scoutam.exec.vol_only_disc", v, int(time.time()))]
                     )
 
         if len(self.scoutFS) > 0:
@@ -309,27 +412,23 @@ class Server(object):
                     stats += 1
                     if self.debug:
                         self.log(v)
-                    metrics.append(
-                        Metric(h, "scoutam.fs_discovery", v, int(time.time()))
+                    self.metrics_disco.append(
+                        [Metric(h, "scoutam.fs_discovery", v, int(time.time()))]
                     )
 
         for h, k, v, ts in self.counters:
-            # v = float(v) / (self.flush_interval / 1000)
 
             metrics.append(Metric(h, k, str(v), ts))
 
             stats += 1
-        self.counters = []
+        self.counters[:] = []
 
         for h, k, v, ts in self.gauges:
-            # v = float(v) / (self.flush_interval / 1000)
-            if "catalog" in k:
-                self.log(k + " " + str(v))
 
             metrics.append(Metric(h, k, str(v), ts))
 
             stats += 1
-        self.gauges = []
+        self.gauges[:] = []
 
         for h, k, v, ts in self.timers:
             if len(v) > 0:
@@ -343,9 +442,7 @@ class Server(object):
                 median = min
 
                 if count > 1:
-                    thresh_index = int(
-                        round(count * float(self.pct_threshold) / 100)
-                    )  # count - int(round((100.0 - self.pct_threshold) / 100) * count)
+                    thresh_index = int(round(count * float(self.pct_threshold) / 100))
                     max_threshold = v[thresh_index - 1]
                     total = sum(v[:thresh_index])
                     mean = total / thresh_index
@@ -373,13 +470,10 @@ class Server(object):
                 )
 
                 stats += 1
-        self.gauges = []
-        # stat_string += "statsd.numStats %s %d" % (stats, int(time.time()))
-        # print(stat_string)
-        if len(metrics) > 0:
+        self.gauges[:] = []
 
-            # self.log(metrics)
-            send_to_zabbix(metrics, self.zabbix_host, self.zabbix_port, 15, self.debug)
+        if len(metrics) > 0:
+            self.metrics.append(metrics)
 
         if self.debug:
             self.log(metrics)
@@ -393,15 +487,28 @@ class Server(object):
         log=stdout_print,
     ):
         # assert type(port) is types.IntType, "port is not an integer: %s" % (port)
-        addr = (hostname, port)
-        self._sock = socket(AF_INET, SOCK_DGRAM)
-        self._sock.bind(addr)
+        # run_socket() self.buffer
+        # run_socket(self.buf,data,hostname,port)
+        self.listen_p = Process(
+            target=run_socket, args=(self.buf, self.buffer, hostname, port)
+        )
+        self.listen_p.start()
         self.zabbix_host = zabbix_host
         self.zabbix_port = zabbix_port
         self.log = log
+        self.send_p = Process(
+            target=do_send,
+            args=(
+                self.zabbix_host,
+                self.zabbix_port,
+                self.metrics,
+                self.metrics_disco,
+                self.flush_interval,
+            ),
+        )
+        self.send_p.start()
 
         import signal
-        import sys
 
         def signal_handler(signal, frame):
             self.stop()
@@ -409,28 +516,40 @@ class Server(object):
         signal.signal(signal.SIGINT, signal_handler)
 
         # self._set_timer()
-        while 1:
-            data, addr = self._sock.recvfrom(self.buf)
-            host, hport = addr
-            self.process(data, host)
-            self.flush()
+        while True:
+            if len(self.buffer) > 0:
+                data, host = self.buffer.pop()
+                self.process(data, host)
+                self.flush()
+            time.sleep(0.1)
 
     def stop(self):
-        self._sock.close()
+        self.listen_p.join(1)
+        self.send_p.join(1)
+        # self._sock.close()
         sys.exit(0)
 
 
 def main_loop(config, log):
-    server = Server(
-        pct_threshold=int(config["main"]["stats_pct_threshold"]),
-        debug=config["main"]["debug"],
-        flush_interval=int(config["main"]["flush_interval"]),
-    )
+    if "override_host" in config["main"]:
+        server = Server(
+            pct_threshold=int(config["main"]["stats_pct_threshold"]),
+            debug=config["main"]["debug"],
+            flush_interval=int(config["main"]["flush_interval"]),
+            override_host=config["main"]["override_host"],
+        )
+    else:
+        server = Server(
+            pct_threshold=int(config["main"]["stats_pct_threshold"]),
+            debug=config["main"]["debug"],
+            flush_interval=int(config["main"]["flush_interval"]),
+        )
+
     server.serve(
         "",
         int(config["main"]["port"]),
         config["zabbix"]["server"],
-        config["zabbix"]["port"],
+        int(config["zabbix"]["port"]),
         log,
     )
 
@@ -451,11 +570,11 @@ def main():
         if arg_dict["action"][0] == "start":
 
             # Are we systemd or should we call syslog ourselves
-            if config["main"]["systemd"]:
+            if config["main"]["systemd"]:  # pyright: ignore
                 log = stdout_print
                 log("SystemD mode startup")
                 pid = os.getpid()
-                fpid = open(config["main"]["pidfile"], "wb")
+                fpid = open(config["main"]["pidfile"], "wb")  # pyright: ignore
                 fpid.write(str(pid).encode("utf-8"))
                 fpid.close()
                 main_loop(config, log)
@@ -465,15 +584,15 @@ def main():
                 deamonize.daemonize_agent(
                     stdout_log="/dev/null",
                     stderr_log="/dev/null",
-                    pidfile=config["main"]["pidfile"],
+                    pidfile=config["main"]["pidfile"],  # pyright: ignore
                 )
                 main_loop(config, log)
         elif arg_dict["action"][0] == "status":
-            if not os.path.exists(config["main"]["pidfile"]):
+            if not os.path.exists(config["main"]["pidfile"]):  # pyright: ignore
                 print("Not running")
                 quit()
             else:
-                pidfile = open(config["main"]["pidfile"], "r")
+                pidfile = open(config["main"]["pidfile"], "r")  # pyright: ignore
                 pid = pidfile.read()
                 found = False
                 if int(pid) > 0:
@@ -490,24 +609,26 @@ def main():
                 else:
                     print("Pid file exists but not running")
                     print("Cleaning Pid file")
-                    os.remove(config["main"]["pidfile"])
+                    os.remove(config["main"]["pidfile"])  # pyright: ignore
                     quit()
         elif arg_dict["action"][0] == "stop":
-            if not os.path.exists(config["main"]["pidfile"]):
+            if not os.path.exists(config["main"]["pidfile"]):  # pyright: ignore
                 print("Not running")
                 quit()
             else:
-                pidfile = open(config["main"]["pidfile"], "r")
+                pidfile = open(config["main"]["pidfile"], "r")  # pyright: ignore
                 pid = int(pidfile.read().strip())
                 try:
                     while 1:
+                        import signal
+
                         os.kill(pid, signal.SIGTERM)
                         time.sleep(0.1)
                 except OSError as err:
                     errtext = str(err)
                     if errtext.find("No such process") > 0:
-                        if os.path.exists(config["main"]["pidfile"]):
-                            os.remove(config["main"]["pidfile"])
+                        if os.path.exists(config["main"]["pidfile"]):  # pyright: ignore
+                            os.remove(config["main"]["pidfile"])  # pyright: ignore
                     else:
                         print(errtext)
                         quit()
