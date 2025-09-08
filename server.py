@@ -102,6 +102,7 @@ class Server(object):
         self.domain_only = {}
         self.vol_only = {}
         self.scsi_drive = {}
+        self.type_res = {}
 
         self.buffer = self.manager.list()
         self.metrics = self.manager.list()
@@ -198,7 +199,7 @@ class Server(object):
                                         self.domain_only[host] = []
                                     if dom not in self.domain_only[host]:
                                         self.domain_only[host].append(dom)
-                                elif "volume" in mkey and "resource" in mkey:
+                                elif "volume" in tmp_dict and "resource" in tmp_dict:
                                     # Type,volume,resource
                                     vol = tmp_dict["volume"]
                                     res = tmp_dict["resource"]
@@ -208,7 +209,7 @@ class Server(object):
                                         self.vol_res[host] = []
                                     if (vol, res) not in self.vol_res[host]:
                                         self.vol_res[host].append((vol, res))
-                                else:
+                                elif "type" in tmp_dict and 'volume' in tmp_dict:
                                     # Type, Volume
                                     tdata = tmp_dict["type"]
                                     vol = tmp_dict["volume"]
@@ -217,6 +218,17 @@ class Server(object):
                                         self.vol_only[host] = []
                                     if vol not in self.vol_only[host]:
                                         self.vol_only[host].append(vol)
+                                elif "type" in tmp_dict and 'resource' in tmp_dict and 'archset' in tmp_dict and 'fsid' in tmp_dict:
+                                    tdata  = tmp_dict["type"]
+                                    res = tmp_dict["resource"]
+                                    arch= tmp_dict["archset"]
+                                    fs = tmp_dict['fsid']
+                                    tkey = tkey + tdata + ',' + res + ',' + arch + ',' + fs + ','
+                                    if not host in self.type_res:
+                                        self.type_res[host] = []
+                                    if (tdata,res,arch,fs) not in self.type_res[host]:
+                                        self.type_res[host].append(tdata,res,arch,fs)
+
                             elif "scoutam.scsi" in mkey:
                                 # Zabbix Autodiscovery for the tape drive metrics
                                 drive = tmp_dict["drive"]
@@ -393,6 +405,34 @@ class Server(object):
                     self.metrics_disco.append(
                         [Metric(h, "scoutam.exec.vol_only_disc", v, int(time.time()))]
                     )
+
+        if len(self.type_res) > 0:
+            for h in self.type_res:
+                if len(self.type_res[h]) > 0:
+                    v = "[\n"
+                    first = True
+                    #tkey = tkey + tdata + ',' + res + ',' + arch + ',' + fs + ','
+                    for t,r,a,f in self.type_res[h]:
+                        if not first:
+                            v = v + "\t,\n"
+                        first = False
+                        v = v + "\t{\n"
+                        v = v + '\t\t"{#TYPE}":"' + t + '",\n'
+                        v = v + '\t\t"{#RESOURCE}":"' + r + '",\n'
+                        v = v + '\t\t"{#ARCHSET}":"' + a + '",\n'
+                        v = v + '\t\t"{#FSID}":"' + f + '"\n'
+                        v = v + "\t}\n"
+
+                    v = v + "]\n"
+
+                    stats += 1
+                    if self.debug:
+                        self.log(v)
+                    self.metrics_disco.append(
+                        [Metric(h, "scoutam.exec.type_res_disc", v, int(time.time()))]
+                    )
+
+
 
         if len(self.scoutFS) > 0:
             for h in self.scoutFS:
